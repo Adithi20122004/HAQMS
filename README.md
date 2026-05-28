@@ -165,7 +165,7 @@ Below is a full account of every issue identified and resolved across all five c
 
 ## 🌐 Deployed App
 
-> **Live URL:** `[deployed link here]`
+> **Live URL:** https://haqmsdemo-j6wf4v9ei-adithi-vaidya-s-projects.vercel.app/
 
 ---
 

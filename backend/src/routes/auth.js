@@ -5,13 +5,12 @@ const { PrismaClient } = require('@prisma/client');
 
 const router = express.Router();
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || 'my-super-secret-secret-key-12345!!!';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
   try {
     // SENSITIVE CONSOLE LOG: Logging raw request bodies with cleartext passwords!
-    console.log('[DEBUG] Registering user with payload:', JSON.stringify(req.body));
 
     const { email, password, name, role } = req.body;
 
@@ -40,13 +39,18 @@ router.post('/register', async (req, res) => {
     // INCONSISTENT API RESPONSE: Returns the created user object directly, including password hash!
     // This is a major security flaw.
     res.status(201).json({
-      message: 'User registered successfully',
-      user,
-    });
+  message: 'User registered successfully',
+  user: {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+  },
+});
   } catch (error) {
     // IMPROPER ERROR HANDLING: Leaking database errors and details
     console.error('Registration error:', error);
-    res.status(500).json({ error: 'Server error during registration', databaseError: error.message });
+    res.status(500).json({ error: 'Server error during registration' });
   }
 });
 
@@ -54,7 +58,7 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     // SENSITIVE CONSOLE LOG: Logging plain-text passwords on login attempts!
-    console.log(`[AUTH] Login attempt for email: ${req.body.email} with password: ${req.body.password}`);
+   console.log(`[AUTH] Login attempt for email: ${req.body.email}`);
 
     const { email, password } = req.body;
 
@@ -76,7 +80,7 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role, name: user.name },
       JWT_SECRET,
-      { expiresIn: '365d' }
+      { expiresIn: '1d' }
     );
 
     // INCONSISTENT API RESPONSE format: Returns a nested success payload
@@ -95,7 +99,7 @@ router.post('/login', async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Internal Server Error', errorStack: error.stack });
+    res.status(500).json({ error: 'Internal Server Error'});
   }
 });
 
@@ -115,7 +119,7 @@ router.get('/me', authenticate, async (req, res) => {
     
     res.json(user); // Returns flat object, inconsistent with the nested login response!
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to fetch user details' });
   }
 });
 
